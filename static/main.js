@@ -13,12 +13,12 @@ window.addEventListener('DOMContentLoaded', async () => {
 
 userForm.addEventListener('submit', async e => {
     e.preventDefault()
-
     const username = userForm['username'].value
     const password = userForm['password'].value
     const email = userForm['email'].value
 
     if (!editing) {
+        
         const response = await fetch('/api/users', {
             method: 'POST',
             headers: {
@@ -27,14 +27,13 @@ userForm.addEventListener('submit', async e => {
             body: JSON.stringify({
                 username,
                 password,
-                email
-    
-            })
+                email,
+            }),
         })
     
         const data = await response.json()
-    
-        users.unshift(data)
+        users.push(data)
+        renderUser(users)
     }   else {
         const response = await fetch(`/api/users/${userId}`, {
             method: 'PUT',
@@ -48,21 +47,22 @@ userForm.addEventListener('submit', async e => {
             })
         })
         const updateUser = await response.json()
-        users = users.map(user => user.id === updateUser.id ? updateUser : user)     
+
+        users = users.map((user) => 
+            user.id === updateUser.id ? updateUser : user
+            );   
+        console.log(users);  
         renderUser(users)  
+
         editing = false
         userId = null 
     }
-
-    renderUser(users);
-
     userForm.reset();
 })
 
 function renderUser(users) {
    const userList = document.querySelector('#userList')
     userList.innerHTML = ''    
-
     users.forEach(user => {
         const userItem = document.createElement('li')
         userItem.classList = 'list-group-item list-group-item-dark my-2'
@@ -78,23 +78,28 @@ function renderUser(users) {
         <p class="text-truncate">${user.password}</p>
         `        
 
+
         const btnDelete = userItem.querySelector('.btn-delete')
 
-        btnDelete.addEventListener('click', async () => {
+        btnDelete.addEventListener('click', async (e) => {
             const response = await fetch(`/api/users/${user.id}`, {
                 method: 'DELETE'
             })
+
             const data = await response.json()
 
-            users = users.filter(user => user.id !== data.id)
+            users = users.filter((user) => user.id !== data.id)
             renderUser(users)
         })
 
+        userList.appendChild(userItem)
+
         const btnEdit = userItem.querySelector('.btn-edit')
 
-        btnEdit.addEventListener('click', async e => {
+        btnEdit.addEventListener('click', async (e) => {
             const response = await fetch(`/api/users/${user.id}`)
             const data = await response.json()
+
             userForm['username'].value = data.username
             userForm['email'].value = data.email
 
@@ -103,6 +108,5 @@ function renderUser(users) {
 
         })
         
-        userList.append(userItem)
     });
 }
